@@ -20,6 +20,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -29,6 +30,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -192,10 +194,19 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(),"Sign in cancelled",Toast.LENGTH_SHORT).show();
                 finish();
             }
-            else if (requestCode==RC_PHOTO_PICKER&& resultCode==RESULT_OK){
-                Uri imageUri=data.getData();
-                StorageReference photoRef=storageReference.child(imageUri.getLastPathSegment());
-            }
+
+        }
+        else if (requestCode==RC_PHOTO_PICKER&& resultCode==RESULT_OK){
+            Uri imageUri=data.getData();
+            StorageReference photoRef=storageReference.child(imageUri.getLastPathSegment());
+            photoRef.putFile(imageUri).addOnSuccessListener(this, new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    Uri downloadUrl=taskSnapshot.getDownloadUrl();
+                    FriendlyMessage message=new FriendlyMessage(null,mUsername,downloadUrl.toString());
+                    reference.push().setValue(message);
+                }
+            });
         }
     }
 
